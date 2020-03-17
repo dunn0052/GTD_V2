@@ -13,6 +13,8 @@ class ButtonTypes(Enum):
 
 class Controller:
 
+    # sub class for button map
+    # and determines if you can hold it or not
     class Button:
         def __init__(self, button, mode = ButtonTypes.SINGLE):
             self.button = button
@@ -54,7 +56,8 @@ class Controller:
         except:
             print("No controller detected!")
             keyboard = True
-
+        # hiding the input function if a keyboard is used
+        # or a controller is not connected for it
         if keyboard:
             self.getInput = self.getKeys
 
@@ -65,7 +68,9 @@ class Controller:
         inputs = set()
 
         pygame.event.get()
-        ## axis control
+        # axis control
+        # the threshold must be tested
+        # to determine if it was actually pressed
         for i in range( NUM_AXIS ):
             axis = self.joystick.get_axis(i)
             if axis >= POS or axis == NEG:
@@ -78,6 +83,7 @@ class Controller:
                 if axis < 0 and i :
                     inputs.add(self.buttonMap["UP"])
 
+        # Haha oh boy, this just takes whatever was input and maps it to output pygame button commands
         inputs = inputs.union(set(map((lambda i: self.buttonMap[i]) , filter( (lambda i: self.joystick.get_button(i)), range(NUM_BUTTONS)))))
 
         # find all the new inputs
@@ -90,6 +96,7 @@ class Controller:
         # return all button enums
         return set( map( (lambda button: button.button), newButtons ))
 
+    # input for keyboard instead @TODO get this to actually work again
     def getKeys(self):
         return None
         inputs = set()

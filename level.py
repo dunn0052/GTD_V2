@@ -36,19 +36,26 @@ class Level:
         except:
             print("Number of layers must be greater than 7")
 
+    # runs through all controllers and controls the PC
+    # sends the button presses to the PC
     def doCommands(self, context):
         # get inputs from all controllers
         for controller in self.controllers:
             buttons = controller.getInput()
             for button in buttons:
-                self.context.doCommand(button)
+                self.PC.doCommand(button)
 
+    # sets all controller(s)
     def setController(self, controller):
-        self.controllers = controller
+          self.controllers = controller
 
-    def removeController(self, controller):
+    def removeControllers(self):
         self.controllers.clear()
 
+    def removeController(self, controller):
+        self.controllers.discard(controller)
+
+    # the context is what the camera follows
     def setContext(self, context):
         self.context = context
 
@@ -57,6 +64,7 @@ class Level:
         self.mapWidth = background.image.get_width()
         self.BACKGROUND.add(background)
 
+    # sets playable PC -- @TODO: setup for multiplayer
     def setPC(self, PC, x, y):
         self.PC = PC
         self.PC_LAYER.add(self.PC)
@@ -72,11 +80,14 @@ class Level:
         self.all_sprites.update(dt)
         for sprite in self.animated_sprites:
             sprite.animate()
-
+        
+    # Animate all sprites in the animation group
     def animate(self):
         for sprite in self.animated_sprites:
             sprite.animate()
 
+    # is the map too small for the screen dimensions? 
+    # Needed for smallUpdate()
     def is_small(self, height, width):
         return self.mapWidth < width or self.mapHeight < height
 '''

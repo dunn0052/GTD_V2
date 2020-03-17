@@ -15,30 +15,37 @@ class SuperSprite(pygame.sprite.Sprite):
       pygame.init()
       pygame.sprite.Sprite.__init__(self)
       
+      # need a list because the images are ordered
       self.images = []
       self.x, self.y = 0, 0
       
+      # could put file name or already loaded pygame image
       if type(image) == str:
           img = self.loadImage(image)
       else:
           img = image.convert_alpha()
       
+      # frames should at least be a factor of the total
+      # image width, if not a multiple of 4 for each direction
       self.frameWidth = img.get_width() // frames
       self.frameHeight = img.get_height()
       
+      # slice the frames
       self.images = self.createFrames(frames, img)
       # self.image is what is drawn
       self.image = pygame.Surface.copy(self.images[0])
 
+      # set starting image
       self.currentImage = 0
       self.rect = self.image.get_rect()
-
 
       self.mask = pygame.mask.from_surface(self.image)
       self.angle = 0
       self.scale = 1
+
+      # iteration counter
       self.subFrame = 0     
-      # min ms of a frame
+      # how many iterations before moving to next frame
       self.frameCap = 10
 
       # commands
@@ -106,11 +113,15 @@ class SuperSprite(pygame.sprite.Sprite):
         self.currentImage %= len(self.images)
         self.changeImage(self.currentImage)
 
+    # in case you want to animate backwards?
     def prevFrame(self):
         self.currentImage -= 1
         self.currentImage %= len(self.images)
         self.changeImage(self.currentImage)
 
+    # flip, skew, bop it! 
+    # For real, this does all the work of rotating or changing sizes
+    # and dealing with the rect
     def transform(self, angle = 0, scale = 1, hflip=False, vflip=False):
         oldmiddle = self.rect.center
         if hflip or vflip:
@@ -144,17 +155,24 @@ class SuperSprite(pygame.sprite.Sprite):
         collided = pygame.sprite.collide_mask(self , other)
         return collided
 
+    # Fun, but just notifies if any sprite in some group
+    # is colliding
     def groupTouching(self, group):
         for sprite in group:
             if self.touching(sprite):
                 return sprite
 
+    # are the centers touching? Way faster if you can do this
+    # instead of the mask collide.
     def checkCollision(self, other, center = False):
         if center:
             return self.rect.collidepoint(other.rect.center)
         return self.rect.colliderect(other)
 
 # ------ BUTTON FUNCTIONS ------
+
+    # A button input calls the command dictionary
+    # and executes the command
     def doCommand(self, button):
         self.commands[button]()
 
@@ -185,13 +203,22 @@ class SuperSprite(pygame.sprite.Sprite):
     def doSELECT(self):
         pass
 
+    # virtual function to do
+    # whatever the sprite needs
+    # to do to animate
     def animate(self, dt):
         pass
 
+    # take in a time delta to
+    # use in calculating the real
+    # time changes between game loops
     def update(self, dt = 0):
         self.dt = dt
 
 # ------ LOADING FUNCTIONS ------
+    # calls the packed lambda functions
+    # that are needed to set a
+    # superSprite up when loaded
     def unpackSprite(self):
         pass
 

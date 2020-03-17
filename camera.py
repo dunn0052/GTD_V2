@@ -1,15 +1,20 @@
 import pygame as pg
 
+# this class is responsible for the game view
+# it follows a rect and moves all other sprites
+# relative to the targeted sprite
 class Camera:
     def __init__(self, width, height):
         self.camera = pg.Rect(0, 0, width, height)
         self.width = width
         self.height = height
 
+    # move entity relative to camera position
     def apply(self, entity):
         return entity.rect.move(self.camera.topleft)
 
-
+    # keeps target on center or
+    # stops on edge of map edges
     def update(self, target):
         x = -target.rect.x + int(self.width / 2)
         y = -target.rect.y + int(self.height / 2)
@@ -20,6 +25,7 @@ class Camera:
         y = max(-(self.mapHeight - self.height), y)  # bottom
         self.camera = pg.Rect(x, y, self.mapWidth, self.mapHeight)
 
+    # define map edges
     def mapSize(self, height, width):
         self.mapHeight = height
         self.mapWidth = width

@@ -25,10 +25,12 @@ class Screen:
         self.screenRefresh = False
         self.tooSmall = False
 
+    # will be used when level loading is created
     def loadGame(self, game):
         self.game = game 
         self.loadLevel()
 
+    # sets up a level to be displayed
     def loadLevel(self):
         self.level = self.game.currentLevel
         self.camera.mapSize(self.level.mapHeight, self.level.mapWidth)
@@ -38,10 +40,12 @@ class Screen:
         else:
             self.updateDisplay = self.updateDisplay
 
+    # executes controller inputs to the current level
     def doCommands(self):
         for controller in self.game.controllers:
             self.level.doCommands(controller)
-
+    
+    # starts the game
     def run(self):
         # game loop - set self.playing = False to end the game
         self.playing = True
@@ -51,13 +55,14 @@ class Screen:
             self.update()
             self.updateDisplay()
 
-
+    # updates the game and moves the camera
     def update(self):
         self.game.update(self.dt)
         # multiplayer take the average of player coords?
         self.camera.update(self.level.PC)
 
     # redraw all sprites to screen
+    # quit when necessary
     def updateDisplay(self):
         # explore dirty sprites
         for layer in self.level.layers:
@@ -71,6 +76,8 @@ class Screen:
             self.quit()
         self.animate()
 
+    # Overloads the regular update for maps smaller
+    # than the screen size
     def updateDisplaySmall(self):
         # needed if background too small
         self.screen.fill((0,0,0))
@@ -93,6 +100,8 @@ class Screen:
         current_time = pg.time.get_ticks()
         return current_time
 
+    # draws the level layers in order and
+    # adjusts the sprites to the camera view
     def drawScrollLayer(self, layer):
         for sprite in layer:
             # keep sprite pos static and draw with camera offsets
