@@ -1,15 +1,16 @@
 from superSprite import SuperSprite
 from math import sqrt
 
-UP = 3
-DOWN = 0
-LEFT = 1
-RIGHT = 2
-
 class PC(SuperSprite):
     
     __level_index = 0
     __sqrt_2 = sqr(2)
+
+
+    __UP = 3
+    __DOWN = 0
+    __LEFT = 1
+    __RIGHT = 2
 
     def __init__(self, image, frames: int, x: int, y: int, speed: int, starting_direction: int):
 
@@ -39,22 +40,22 @@ class PC(SuperSprite):
     #---- movement commands ----
     def doDOWN(self):
         #  First dir
-        self.changeDirection(DOWN)
+        self.changeDirection(self.__DOWN)
         self.vy = self.speed
         self.move_flag = True
 
     def doLEFT(self):
-        self.changeDirection(LEFT)
+        self.changeDirection(self.__LEFT)
         self.vx = -self.speed
         self.move_flag = True
 
     def doRIGHT(self):
-        self.changeDirection(RIGHT)
+        self.changeDirection(self.__RIGHT)
         self.vx = self.speed
         self.move_flag = True
 
     def doUP(self):
-        self.changeDirection(UP)
+        self.changeDirection(self.__UP)
         self.vy = -self.speed
         self.move_flag = True
 
@@ -63,7 +64,7 @@ class PC(SuperSprite):
         if self.move_flag:
             self.movementUpdate()
 
-    def doLEFT(self):
+    def doA(self):
         return self.exit()
 
     def movementUpdate(self):
