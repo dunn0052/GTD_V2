@@ -50,9 +50,6 @@ r.setLevelChange(1, 0, 880, 175, 3)
 r.setLevelChange(2, 0, 880, 175, 3)
 
 
-#git credentials
-
-
 c = Controller(0)
 
 test_level = o.unpackLevel()
