@@ -15,7 +15,9 @@ class Camera:
 
     # keeps target on center or
     # stops on edge of map edges
-    def update(self, target):
+    def update(self, level):
+        target = level.PC
+        self.mapSize(level.mapHeight, level.mapWidth)
         x = -target.rect.x + int(self.width / 2)
         y = -target.rect.y + int(self.height / 2)
         # limit scrolling to map size

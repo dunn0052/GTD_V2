@@ -1,6 +1,6 @@
 import pygame as pg
 from camera import Camera
-import sys
+import os
 
 # the screen object represents the screen/hardware of the game system
 # it draws the layers of each level and updates game animation.
@@ -27,24 +27,17 @@ class Screen:
 
     # will be used when level loading is created
     def loadGame(self, game):
-        self.game = game 
+        self.game = game
+        self.game.start()
         self.loadLevel()
 
     # sets up a level to be displayed
     def loadLevel(self):
-        self.level = self.game.currentLevel
-        self.camera.mapSize(self.level.mapHeight, self.level.mapWidth)
-
-        if(self.level.is_small(self.height, self.width)):
-            self.updateDisplay = self.updateDisplaySmall
-        else:
-            self.updateDisplay = self.updateDisplay
-
-    # executes controller inputs to the current level
-    def doCommands(self):
-        for controller in self.game.controllers:
-            self.level.doCommands(controller)
+        self.camera.mapSize(self.game.currentLevel.mapHeight, self.game.currentLevel.mapWidth)
     
+    def doCommands(self):
+        self.game.doCommands()
+
     # starts the game
     def run(self):
         # game loop - set self.playing = False to end the game
@@ -55,38 +48,28 @@ class Screen:
             self.update()
             self.updateDisplay()
 
+    def runProfiler(self, n):
+        for _ in range(n):
+            self.dt = self.clock.tick(self.fps) / 1000
+            self.doCommands()
+            self.update()
+            self.updateDisplay()
+
     # updates the game and moves the camera
     def update(self):
         self.game.update(self.dt)
         # multiplayer take the average of player coords?
-        self.camera.update(self.level.PC)
+        self.camera.update(self.game.currentLevel)
 
     # redraw all sprites to screen
     # quit when necessary
     def updateDisplay(self):
-        # explore dirty sprites
-        for layer in self.level.layers:
-                self.drawScrollLayer(layer)
-        self.level.static_sprites.draw(self.screen)
-        self.level.text_layer.draw(self.screen)
-
-        pg.display.flip()
-        keys = pg.key.get_pressed()
-        if (keys[pg.K_ESCAPE]):
-            self.quit()
-        self.animate()
-
-    # Overloads the regular update for maps smaller
-    # than the screen size
-    def updateDisplaySmall(self):
-        # needed if background too small
         self.screen.fill((0,0,0))
-                # explore dirty sprites
-        for layer in self.level.layers:
+        # explore dirty sprites
+        for layer in self.game.currentLevel.layers:
                 self.drawScrollLayer(layer)
-        self.level.static_sprites.draw(self.screen)
-        self.level.text_layer.draw(self.screen)
-
+        self.game.currentLevel.static_sprites.draw(self.screen)
+        self.game.currentLevel.text_layer.draw(self.screen)
         pg.display.flip()
         keys = pg.key.get_pressed()
         if (keys[pg.K_ESCAPE]):
@@ -94,7 +77,7 @@ class Screen:
         self.animate()
 
     def animate(self):
-        self.level.animate()
+        self.game.currentLevel.animate()
 
     def gameClock(self):
         current_time = pg.time.get_ticks()
@@ -108,5 +91,6 @@ class Screen:
             self.screen.blit(sprite.image, self.camera.apply(sprite))
 
     def quit(self):
+        print("Game Ended")
         pg.quit()
-        sys.exit()
+        os._exit(1)

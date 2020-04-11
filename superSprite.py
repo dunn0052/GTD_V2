@@ -11,47 +11,65 @@ for interaction with buttons
 '''
 
 class SuperSprite(pygame.sprite.Sprite):
-    def __init__(self, image = None, frames=1):
-      pygame.init()
-      pygame.sprite.Sprite.__init__(self)
-      
-      # need a list because the images are ordered
-      self.images = []
-      self.x, self.y = 0, 0
-      
-      # could put file name or already loaded pygame image
-      if type(image) == str:
-          img = self.loadImage(image)
-      else:
-          img = image.convert_alpha()
-      
-      # frames should at least be a factor of the total
-      # image width, if not a multiple of 4 for each direction
-      self.frameWidth = img.get_width() // frames
-      self.frameHeight = img.get_height()
-      
-      # slice the frames
-      self.images = self.createFrames(frames, img)
-      # self.image is what is drawn
-      self.image = pygame.Surface.copy(self.images[0])
+    
+    # used for diagonal distance calculations
+    __sqrt_2 = math.sqrt(2)
 
-      # set starting image
-      self.currentImage = 0
-      self.rect = self.image.get_rect()
+    # directions coordinate the direction frame collections
+    __UP = 3
+    __DOWN = 0
+    __LEFT = 1
+    __RIGHT = 2
 
-      self.mask = pygame.mask.from_surface(self.image)
-      self.angle = 0
-      self.scale = 1
+    def __init__(self, x = 0, y = 0, image = None, frames=1):
+        
+        pygame.init()
+        pygame.sprite.Sprite.__init__(self)
 
-      # iteration counter
-      self.subFrame = 0     
-      # how many iterations before moving to next frame
-      self.frameCap = 10
+        # need a list because the images are ordered
+        self.images = []
+        self.x, self.y = x, y
+        # could put file name or already loaded pygame image
+        if type(image) == str:
+            img = self.loadImage(image)
+        else:
+            img = image.convert_alpha()
 
-      # commands
-      self.commands = {KB.A:self.doA,KB.B:self.doB,KB.X:self.doX,KB.Y:self.doY,KB.DOWN:self.doDOWN, \
-                                  KB.UP:self.doUP,KB.LEFT:self.doLEFT,KB.RIGHT:self.doRIGHT,KB.L:self.doL, \
-                                  KB.R:self.doR,KB.START:self.doSTART, KB.SELECT:self.doSELECT}
+        # frames should at least be a factor of the total
+        # image width, if not a multiple of 4 for each direction
+        self.frameWidth = img.get_width() // frames
+        self.frameHeight = img.get_height()
+
+        # slice the frames
+        self.images = self.createFrames(frames, img)
+        # self.image is what is drawn
+        self.image = pygame.Surface.copy(self.images[0])
+
+        # set starting image
+        self.currentImage = 0
+        self.rect = self.image.get_rect()
+        self.hitbox = pygame.Rect(self.x, self.y + self.rect.height/2, self.rect.width, self.rect.height/2)
+
+        self.mask = pygame.mask.from_surface(self.image)
+        self.angle = 0
+        self.scale = 1
+
+        # need to modify for uneven frames
+        self.animation_cycle = frames//4
+        
+        self.current_frame = 0
+
+        self.animation_timer = 0
+        self.animation_time_until_next = 0.15
+        
+        # finally move to proper position
+        self.moveTo(self.x, self.y)
+
+
+        # commands
+        self.commands = {KB.A:self.doA,KB.B:self.doB,KB.X:self.doX,KB.Y:self.doY,KB.DOWN:self.doDOWN, \
+                                    KB.UP:self.doUP,KB.LEFT:self.doLEFT,KB.RIGHT:self.doRIGHT,KB.L:self.doL, \
+                                    KB.R:self.doR,KB.START:self.doSTART, KB.SELECT:self.doSELECT}
 
 # probably should delete, but could be useful?
     def parseColour(self,colour):
@@ -144,11 +162,18 @@ class SuperSprite(pygame.sprite.Sprite):
         self.y += y
         self.rect.x = self.x
         self.rect.y = self.y
+        self.hitbox.x = self.x
+        self.hitbox.y = self.y + self.hitbox.height
 
 # move to coordinates
     def moveTo(self, x, y):
         self.rect.x, self.x = x, x
         self.rect.y, self.y = y, y
+        self.hitbox.x = self.x
+        self.hitbox.y = self.y + self.hitbox.height
+
+    def moveToTile(self, x, y, tileWidth, tileHeight):
+        self.moveTo(x * tileWidth, y * tileHeight)
 
 # ------ COLLISION FUNCTIONS ------
     def touching(self, other):
@@ -169,6 +194,23 @@ class SuperSprite(pygame.sprite.Sprite):
             return self.rect.collidepoint(other.rect.center)
         return self.rect.colliderect(other)
 
+    def collideRect(self, box, group):
+        for sprite in group:
+            if sprite.rect.colliderect(box):
+                return sprite
+
+    def collideHitbox(self, other):
+        return other.rect.colliderect(self.hitbox)
+
+    def animate(self):
+        if self.animation_timer < self.animation_time_until_next:
+            # 10ms is max animation speed
+            self.animation_timer += self.dt
+        else:
+            self.current_frame = (self.current_frame+1)%self.animation_cycle             # Loop on end
+            self.animation_timer = 0
+            self.nextFrame()
+            
 # ------ BUTTON FUNCTIONS ------
 
     # A button input calls the command dictionary
@@ -203,12 +245,6 @@ class SuperSprite(pygame.sprite.Sprite):
     def doSELECT(self):
         pass
 
-    # virtual function to do
-    # whatever the sprite needs
-    # to do to animate
-    def animate(self, dt):
-        pass
-
     # take in a time delta to
     # use in calculating the real
     # time changes between game loops
@@ -221,7 +257,3 @@ class SuperSprite(pygame.sprite.Sprite):
     # superSprite up when loaded
     def unpackSprite(self):
         pass
-
-# cheap shot to use level parameters - probably out of scope
-    def setLevel(self, level):
-        self.level = level

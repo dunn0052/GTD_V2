@@ -6,40 +6,50 @@ from level import Level
 class Game:
     
     def __init__(self):
-        self.levels = set()
+        self.levels = list()
         self.controllers = set()
         self.currentLevel = None
-        self.levelIndex = 0
+        self.PC = None
+
+    def start(self):
+        self.currentLevel = self.levels[self.PC.level_index]
+        self.currentLevel.setPC(self.PC, self.PC.x, self.PC.y)
+
 
     # controllers are in a set in case the same one is added more than once
     def addController(self, controller):
         self.controllers.add(controller)
 
     def loadLevel(self, levelPath):
-        self.levelBuffer = loadObject(levelPath)
-        self.initLevel(self.levelBuffer.unpack())
-    # start a level to be used by the screen
-    def initLevel(self, level, PC):
-        self.currentLevel = level
-        self.currentLevel.setController(self.controllers)
-        self.addLevel(self.currentLevel)
-        self.currentLevel.setPC(PC, 0, 0)
-        
+        levelBuffer = loadObject(levelPath)
+        self.addLevel(levelBuffer.unpack())
+
+    def setPC(self, PC):
+        self.PC = PC
+
+    def changeLevel(self):
+        PC = self.currentLevel.PC
+        self.currentLevel = self.levels[PC.level_index]
+        self.currentLevel.setPC(PC, PC.x, PC.y)
+
     # adds level on deck
     def addLevel(self, level):
-        self.levels.add(level)
+        if self.PC:
+            self.levels.append(level)
+            self.levels[-1].setController(self.controllers)
+            self.levels[-1].index = len(self.levels) -1
+        else:
+            print("Need to set a PC first")
 
-    # changes the current level to another one
-    def setCurrentLevel(self, index, x, y):
-        #self.screenFade()
-        PC = self.currentLevel.PC
-        # remove from current sprite update
-        self.currentLevel.PC.kill()
-        # avoid crashes
-        if 0 < index < len(self.levels):
-            self.currentLevel = self.levels[index]
-        self.initLevel(self.currentLevel, PC)
+    def doCommands(self):
+        self.currentLevel.doCommands(self.controllers)
 
     # pass information about a level/game to the screen
     def update(self, dt):
+        # handle level transitions
+        if self.currentLevel.index != self.currentLevel.PC.level_index:
+            self.changeLevel()
         self.currentLevel.update(dt)
+
+    def getLevelIndex(self):
+        return self.currentLevel.PC.getLevelIndex()

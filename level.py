@@ -1,5 +1,5 @@
 import pygame as pg
-#from textBox import Textbox
+from textBox import Textbox
 # the level class holds the layers of sprites to draw
 # it also executes commands of the current controller context
 
@@ -10,17 +10,26 @@ class Level:
         # filenames
         self.name = name
 
+        #index in game level
+        self.index = 0
+
         # ensure that there is only one of each controller
         self.controllers = set()
+
+        self.PC = None
+        self.text_box = None
 
         # initialize all variables and do all the setup for a new game
         self.all_sprites = pg.sprite.Group()
         self.solid_sprites = pg.sprite.Group()
+        self.exit_triggers = pg.sprite.LayeredUpdates()
         self.animated_sprites = pg.sprite.Group()
         self.static_sprites = pg.sprite.OrderedUpdates() # maybe layeredUpdates?
-        self.text_layer = pg.sprite.GroupSingle()
-        self.npc_sprites = pg.sprite.Group()
+        self.text_layer = pg.sprite.Group() # need more than 1 textbox?
+        self.npc_sprites = [] #so you can access individual NPCs
         self.enemy_sprites = pg.sprite.Group()
+        self.talking_sprites = pg.sprite.Group()
+
         # draw layers
         self.layers = []
         for _ in range(layerNum):
@@ -43,7 +52,7 @@ class Level:
         for controller in self.controllers:
             buttons = controller.getInput()
             for button in buttons:
-                self.PC.doCommand(button)
+                self.context.doCommand(button)
 
     # sets all controller(s)
     def setController(self, controller):
@@ -66,6 +75,10 @@ class Level:
 
     # sets playable PC -- @TODO: setup for multiplayer
     def setPC(self, PC, x, y):
+        # if PC is presnet then remove from all groups
+        if self.PC:
+            self.PC.kill()
+
         self.PC = PC
         self.PC_LAYER.add(self.PC)
         self.all_sprites.add(self.PC)
@@ -75,11 +88,40 @@ class Level:
         #eventualy move to tile
         self.PC.moveTo(x, y)
 
+    def updateText(self):
+        if self.PC.textNotify:
+
+            talkingSprite = self.PC.collideRect(self.PC.interactionBox, self.talking_sprites)
+            if talkingSprite:
+                # check to see if you're facing the talking sprite
+                if self.PC.anySideCollision(talkingSprite.rect):
+                    self.text_box.setText(talkingSprite.text)
+                    self.text_layer.add(self.text_box)
+                    self.animated_sprites.add(self.text_box)
+                    self.all_sprites.add(self.text_box)
+                    self.setContext(self.text_box)
+
+            self.PC.textNotify = False
+            
+
+        if self.text_box.done:
+            self.setContext(self.PC)
+            self.text_box.done = False
+
+    # executes controller inputs to the current level
+    def doCommands(self, controllers):
+        for controller in controllers:
+            inputs = controller.getInput()
+            for button in inputs:
+                self.context.commands[button]()
+
     # signals to level can be read to screen and game from here
     def update(self, dt):
+        self.updateText()
         self.all_sprites.update(dt)
-        for sprite in self.animated_sprites:
-            sprite.animate()
+        self.PC.controllerMove(self.solid_sprites)
+        self.PC.levelTriggerCollision(self.exit_triggers)
+        self.animate()
         
     # Animate all sprites in the animation group
     def animate(self):
@@ -90,19 +132,8 @@ class Level:
     # Needed for smallUpdate()
     def is_small(self, height, width):
         return self.mapWidth < width or self.mapHeight < height
-'''
-    def setPC(self, PC, x, y):
-        self.PC = PC
-        self.PC.level = self
-        self.PC_LAYER.add(self.PC)
-        self.all_sprites.add(self.PC)
-        self.animated_sprites.add(self.PC)
-        self.PC.moveToTile(x, y)
-        self.setControllerContext(self.PC)
-        if self.PC.weapon:
-            self.PC.weapon.kill()
-            self.PC.weapon.level = self.PC.level
 
+'''
     def displayText(self, text):
         self.text = Textbox(text = text, backgroundImage = "images//textBackground.png", offset = 65, level = self)
         self.all_sprites.add(self.text)
