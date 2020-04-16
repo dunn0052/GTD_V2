@@ -75,6 +75,7 @@ class Controller:
         # axis control
         # the threshold must be tested
         # to determine if it was actually pressed
+        # In theory this should work? I think my controller is broken
         for i in range( NUM_AXIS ):
             axis = self.joystick.get_axis(i)
             if axis >= POS or axis == NEG:

@@ -18,10 +18,11 @@ class Level:
 
         self.PC = None
         self.text_box = None
+        self.darkness = pg.Surface((0,0))
 
         # initialize all variables and do all the setup for a new game
         self.all_sprites = pg.sprite.Group()
-        self.solid_sprites = pg.sprite.Group()
+        self.solid_sprites = dict()
         self.exit_triggers = pg.sprite.LayeredUpdates()
         self.animated_sprites = pg.sprite.Group()
         self.static_sprites = pg.sprite.OrderedUpdates() # maybe layeredUpdates?
@@ -68,10 +69,17 @@ class Level:
     def setContext(self, context):
         self.context = context
 
+    def setScreenSize(self, height, width):
+        self.screenHeight = height
+        self.screenWidth = width
+
     def setBackground(self, background):
         self.mapHeight = background.image.get_height()
         self.mapWidth = background.image.get_width()
         self.BACKGROUND.add(background)
+
+    def draw_weather_effects(self, screen):
+        screen.blit(self.darkness, (0,0))
 
     # sets playable PC -- @TODO: setup for multiplayer
     def setPC(self, PC, x, y):
@@ -88,7 +96,12 @@ class Level:
         #eventualy move to tile
         self.PC.moveTo(x, y)
 
+        # attatch rays to all solid sprites
+        self.PC.createRays(self.solid_sprites.values())
+
+
     def updateText(self):
+        # Check if any NPCs in range have something to say
         if self.PC.textNotify:
 
             talkingSprite = self.PC.collideRect(self.PC.interactionBox, self.talking_sprites)
@@ -119,7 +132,7 @@ class Level:
     def update(self, dt):
         self.updateText()
         self.all_sprites.update(dt)
-        self.PC.controllerMove(self.solid_sprites)
+        self.PC.controllerMove(self.solid_sprites.values())
         self.PC.levelTriggerCollision(self.exit_triggers)
         self.animate()
         
@@ -128,36 +141,15 @@ class Level:
         for sprite in self.animated_sprites:
             sprite.animate()
 
+    def updateLighting(self, camera):
+        for ray in self.PC.rays:
+
+            #ray.raytrace(self.solid_sprites, self.tileHeight, self.tileWidth)
+            ray.rayTrace(self.tileHeight, self.tileWidth, self.solid_sprites)
+            ray.update(camera.camera.topleft)
+                
+
     # is the map too small for the screen dimensions? 
     # Needed for smallUpdate()
     def is_small(self, height, width):
         return self.mapWidth < width or self.mapHeight < height
-
-'''
-    def displayText(self, text):
-        self.text = Textbox(text = text, backgroundImage = "images//textBackground.png", offset = 65, level = self)
-        self.all_sprites.add(self.text)
-        self.text_layer.add(self.text)
-        self.setControllerContext(self.text)
-
-# make fade surface on static layer
-    def screenFade(self):
-        self.setControllerContext(self.off)
-        fade = pg.Surface((self.currentLevel.width, self.currentLevel.height))
-        fade.fill((0,0,0))
-        for alpha in range(0, 100, 2):
-            fade.set_alpha(alpha)
-            pg.display.flip()
-            pg.time.delay(10)
-
-
-    def initLevel(self, levelPath):
-        self.levelBuffer = loadObject(levelPath)
-        self.level = self.levelBuffer.unpackLevel()
-        self.level.setController(self.controllers[0])
-        self.camera.mapSize(self.level.background.originalHeight, self.level.background.originalWidth)
-        if self.level.background.originalWidth < self.width or self.level.background.originalHeight < self.height:
-            self.updateDisplay = self.updateDisplaySmall
-        else:
-            self.updateDisplay = self.updateDisplay
-'''

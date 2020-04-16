@@ -13,6 +13,9 @@ class Camera:
     def apply(self, entity):
         return entity.rect.move(self.camera.topleft)
 
+    def applyCoord(self, entity):
+        return entity.move(self.camera.topleft)
+
     # keeps target on center or
     # stops on edge of map edges
     def update(self, level):

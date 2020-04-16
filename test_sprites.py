@@ -25,6 +25,7 @@ l.setLevelChange(0, 0, 398, 485, 0)
 l.setLevelChange(1, 0, 398, 485, 0)
 l.setLevelChange(2, 0, 398, 485, 0)
 l.setNPCText(0, "hey")
+l.setDarkness(s.height, s.width, 0)
 
 # outside level
 o = levelSDK.packedLevel()
@@ -38,6 +39,7 @@ o.setLevelChange(2, 1, 293, 686, 3)
 o.setLevelChange(0,2,653, 25530,0)
 o.setLevelChange(1,2,653, 2553,0)
 o.setNPCText(0, "sneakin by ya")
+#o.setDarkness(s.height, s.width, 150)
 
 r = levelSDK.packedLevel()
 r.loadTileSheet("images\BWBG.png", 80, 80)

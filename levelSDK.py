@@ -52,7 +52,7 @@ class packedLevel:
                                 image = self.tiles[int(tile)])
                             self.level.WALL_LAYER.add(ent)
                             self.level.all_sprites.add(ent)
-                            self.level.solid_sprites.add(ent)
+                            self.level.solid_sprites[(col, row)] = ent
 
     def loadTriggers(self, filename):
         data = self.loadData(filename)
@@ -95,6 +95,14 @@ class packedLevel:
                             self.level.OVER_LAYER.add(ent)
                             self.level.all_sprites.add(ent)
 
+    def setDarkness(self, height, width, alpha):
+        #set to size of screen
+        self.level.darkness = pg.Surface((width, height))
+        #fill with black
+        self.level.darkness.fill((0,0,0))
+        # adjust opacity
+        self.level.darkness.set_alpha(alpha)
+
     def loadNPCs(self, filename):
         npc_index = 0
         data = self.loadData(filename)
@@ -105,7 +113,7 @@ class packedLevel:
                                 image = self.tiles[int(tile)], frames = 1, speed = 0, starting_direction = 0)
                             self.level.NPC_LAYER.add(ent)
                             self.level.all_sprites.add(ent)
-                            self.level.solid_sprites.add(ent)
+                            self.level.solid_sprites[(col, row)] = ent
                             self.level.npc_sprites.append(ent)
                             self.setNPCText(npc_index, str(npc_index))
                             npc_index += 1
@@ -121,7 +129,7 @@ class packedLevel:
     def loadAnimatedSprite(self, sprite):
         self.level.NPC_LAYER.add(sprite)
         self.level.all_sprites.add(sprite)
-        self.level.solid_sprites.add(sprite)
+        #self.level.solid_sprites.add(sprite)
         self.level.animated_sprites.add(sprite)
 
 #---------- PACK COMMANDS -----------

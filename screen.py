@@ -18,6 +18,10 @@ class Screen:
         # camera size of screen
         self.camera = Camera(Width, Height)
 
+        # backdrop is black screen
+        self.backdrop = pg.Surface((self.width, self.height))
+        self.backdrop.fill((0,0,0))
+
         # TIMING SETUP #
         self.fps = fps
         self.refresh = refresh
@@ -34,7 +38,8 @@ class Screen:
     # sets up a level to be displayed
     def loadLevel(self):
         self.camera.mapSize(self.game.currentLevel.mapHeight, self.game.currentLevel.mapWidth)
-    
+        self.game.currentLevel.setScreenSize(self.height, self.width)
+
     def doCommands(self):
         self.game.doCommands()
 
@@ -48,6 +53,8 @@ class Screen:
             self.update()
             self.updateDisplay()
 
+    # can be run to see if there is a game slowdown
+    # and where it should be more effiecient
     def runProfiler(self, n):
         for _ in range(n):
             self.dt = self.clock.tick(self.fps) / 1000
@@ -58,16 +65,30 @@ class Screen:
     # updates the game and moves the camera
     def update(self):
         self.game.update(self.dt)
+
         # multiplayer take the average of player coords?
         self.camera.update(self.game.currentLevel)
+        
+        # move lighting with camera
+        self.game.currentLevel.updateLighting(self.camera)
+
+    def clearScreen(self):
+        # clear screen with black
+        self.screen.blit(self.backdrop, (0,0))
+    
 
     # redraw all sprites to screen
     # quit when necessary
     def updateDisplay(self):
-        self.screen.fill((0,0,0))
+        self.clearScreen()
         # explore dirty sprites
         for layer in self.game.currentLevel.layers:
                 self.drawScrollLayer(layer)
+                
+        # draw rays
+        self.drawLighting()
+        
+        self.game.currentLevel.draw_weather_effects(self.screen)
         self.game.currentLevel.static_sprites.draw(self.screen)
         self.game.currentLevel.text_layer.draw(self.screen)
         pg.display.flip()
@@ -82,6 +103,10 @@ class Screen:
     def gameClock(self):
         current_time = pg.time.get_ticks()
         return current_time
+
+    def drawLighting(self):
+        for ray in self.game.currentLevel.PC.rays:
+            ray.draw(self.screen)
 
     # draws the level layers in order and
     # adjusts the sprites to the camera view

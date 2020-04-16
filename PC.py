@@ -2,6 +2,7 @@ from superSprite import SuperSprite
 from spriteMessage import SpriteMessage
 from math import sqrt
 import pygame as pg
+from rays import Ray
 
 class PC(SuperSprite):
     
@@ -11,7 +12,7 @@ class PC(SuperSprite):
 
 
     # used for diagonal distance calculations
-    __sqrt_2 = sqrt(2)
+    __i_sqrt_2 = 1/sqrt(2)
 
         # directions coordinate the direction frame collections
     __UP = 3
@@ -30,13 +31,19 @@ class PC(SuperSprite):
         # velocity in each direction
         self.vx, self.vy = 0, 0
 
+        # speed in pixels per second
         self.speed = speed
+
         self.direction = starting_direction
+        
+        # User defined frames per direction
         self.animation_cycles = [downFrame, leftFrame, rightFrame, upFrame]
+        
+        # if none are defined then assume that they are evenly distributed
         if not any(self.animation_cycles):
             self.animation_cycles = [frames//4]*4
 
-        # pre calculate animation direction starts
+        # pre calculate which frame index each direction starts on
         self.frame_start = {self.__UP:self.animation_start(self.__UP),\
                             self.__DOWN:self.animation_start(self.__DOWN),\
                             self.__LEFT:self.animation_start(self.__LEFT),\
@@ -44,8 +51,8 @@ class PC(SuperSprite):
         
         self.move_flag_y = False
         self.move_flag_x = False
-        # number of animations must be the same for each direction
 
+        # Set the controller that owns this PC
         self.controllerIndex = controllerIndex
         self.level_index = level_index
 
@@ -57,13 +64,27 @@ class PC(SuperSprite):
             self.y - self.buffer, self.rect.width + 2*self.buffer, \
             self.rect.height + 2*self.buffer)
 
+        # Var to let the level know that PC is looking for someone to talk to
         self.textNotify = False
+
+        self.rays = []
+
+    def createRays(self, group):
+        
+        self.rays.clear()
+        
+        for sprite in group:
+                self.rays.append(Ray(self.rect.center))                
+
+                #attatch end of ray to sprite centers
+                self.rays[-1].attatch(sprite.rect.bottomright)
 
     def animation_start(self, dir):
         return sum(self.animation_cycles[:dir])
 
     def changeDirection(self, direction: int):
         self.direction = direction
+        # start on current frame of specified direction
         self.changeImage(self.frame_start[self.direction] + self.current_frame%self.animation_cycles[self.direction])
 
     #---- movement commands ----
@@ -100,18 +121,22 @@ class PC(SuperSprite):
     def update(self, dt):
         self.dt = dt
 
+    # move PC if needed
     def controllerMove(self, group):
         if self.move_flag_x:
             self.movementUpdateX(self.move_flag_y, group)
         if self.move_flag_y:
             self.movementUpdateY(self.move_flag_x, group)
 
+        for ray in self.rays:
+            ray.move(self.rect.center)
         # reset to starting position
         if not self.vx and not self.vy:
             self.changeImage(self.frame_start[self.direction])
         self.vx, self.vy = 0,0
         self.move_flag_x, self.move_flag_y = False, False
 
+    # change level and move the PC to the defined position
     def levelTriggerCollision(self, group):
         transition = self.collideRect(self.hitbox, group)
         if transition:
@@ -130,11 +155,11 @@ class PC(SuperSprite):
             (self.interactionBox.collidepoint(rectangle.left, rectangle.center[1]) and self.direction == self.__RIGHT) or \
             (self.interactionBox.collidepoint(rectangle.right, rectangle.center[1]) and self.direction == self.__LEFT)
 
-
     def movementUpdateY(self, diagonal, group):
         y_distance = self.vy * self.dt
+        # move sqrt 2 in each direction to offset both x and y velocities
         if diagonal:
-            y_distance *= 0.7071
+            y_distance *= self.__i_sqrt_2
         self.y += y_distance
         self.rect.y = self.y
         self.hitbox.y = self.y + self.hitbox.height # hitbox is half our height
@@ -145,7 +170,7 @@ class PC(SuperSprite):
     def movementUpdateX(self, diagonal, group):
         x_distance = self.vx * self.dt
         if diagonal:
-            x_distance *= 0.7071
+            x_distance *= self.__i_sqrt_2
         self.x += x_distance
         self.rect.x = self.x
         self.hitbox.x = self.x
@@ -153,6 +178,7 @@ class PC(SuperSprite):
         self.collideX(self.collideRect(self.hitbox, group))
         #self.collideX(self.groupTouching(group))
 
+    # if colliding with something move PC to the edge of it
     def collideX(self, ent):
         if not ent:
             return None
@@ -177,15 +203,19 @@ class PC(SuperSprite):
         self.hitbox.y = self.y + self.hitbox.height
 
 
+    # level is set by the index of the PC on every frame
+    # somehow faster than an if statement check
     def transition(self, levelNum):
         self.level_index = levelNum
 
+    # request to open dialog with the nearest NPC
     def openTextBox(self):
         self.textNotify = True
 
+
+    # updates directional frame index if enough time has elapsed
     def animate(self):
         if self.animation_timer < self.animation_time_until_next:
-            # 10ms is max animation speed
             self.animation_timer += self.dt
         else:
             self.current_frame = (self.current_frame+1)%self.animation_cycles[self.direction]              # Loop on end

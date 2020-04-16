@@ -29,8 +29,10 @@ class Game:
 
     def changeLevel(self):
         PC = self.currentLevel.PC
+        PC.rays.clear()
         self.currentLevel = self.levels[PC.level_index]
         self.currentLevel.setPC(PC, PC.x, PC.y)
+
 
     # adds level on deck
     def addLevel(self, level):
