@@ -6,3 +6,6 @@ class LevelTransition(Trigger):
         self.index = index
         self.PC_x, self.PC_y = x, y
         self.PC_dir = dir        
+
+    def draw(self, screen, offset):
+        pass

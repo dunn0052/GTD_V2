@@ -2,6 +2,9 @@ import pygame as pg
 from camera import Camera
 import os
 
+#testing
+from ray2 import Ray
+
 # the screen object represents the screen/hardware of the game system
 # it draws the layers of each level and updates game animation.
 
@@ -66,11 +69,10 @@ class Screen:
     def update(self):
         self.game.update(self.dt)
 
-        # multiplayer take the average of player coords?
-        self.camera.update(self.game.currentLevel)
-        
         # move lighting with camera
         self.game.currentLevel.updateLighting(self.camera)
+        
+        self.camera.update(self.game.currentLevel)
 
     def clearScreen(self):
         # clear screen with black
@@ -82,15 +84,13 @@ class Screen:
     def updateDisplay(self):
         self.clearScreen()
         # explore dirty sprites
-        for layer in self.game.currentLevel.layers:
-                self.drawScrollLayer(layer)
-                
-        # draw rays
-        self.drawLighting()
+        self.drawAllLayers(self.game.currentLevel.layers)
         
         self.game.currentLevel.draw_weather_effects(self.screen)
         self.game.currentLevel.static_sprites.draw(self.screen)
         self.game.currentLevel.text_layer.draw(self.screen)
+
+
         pg.display.flip()
         keys = pg.key.get_pressed()
         if (keys[pg.K_ESCAPE]):
@@ -104,9 +104,10 @@ class Screen:
         current_time = pg.time.get_ticks()
         return current_time
 
-    def drawLighting(self):
-        for ray in self.game.currentLevel.PC.rays:
-            ray.draw(self.screen)
+    def drawAllLayers(self, layers):
+        for layer in layers:
+            layer.draw(self.screen, self.camera.camera.topleft)
+
 
     # draws the level layers in order and
     # adjusts the sprites to the camera view

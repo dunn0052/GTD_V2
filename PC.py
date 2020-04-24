@@ -1,8 +1,8 @@
 from superSprite import SuperSprite
-from spriteMessage import SpriteMessage
 from math import sqrt
 import pygame as pg
-from rays import Ray
+from ray2 import Ray
+from rayGroup import RayGroup
 
 class PC(SuperSprite):
     
@@ -67,17 +67,22 @@ class PC(SuperSprite):
         # Var to let the level know that PC is looking for someone to talk to
         self.textNotify = False
 
-        self.rays = []
-
-    def createRays(self, group):
         
-        self.rays.clear()
-        
-        for sprite in group:
-                self.rays.append(Ray(self.rect.center))                
+        self.rays = None
 
-                #attatch end of ray to sprite centers
-                self.rays[-1].attatch(sprite.rect.bottomright)
+    def createRays(self, tileSize, mapSize, rayAnchors, solidObjects):
+        self.rays = RayGroup(tileSize, mapSize, solidObjects.keys())
+
+        for sprite in rayAnchors.values():
+                self.rays.append(Ray(self.rect.center, sprite.topleft))
+                self.rays.append(Ray(self.rect.center, sprite.topright))
+                self.rays.append(Ray(self.rect.center, sprite.bottomleft))
+                self.rays.append(Ray(self.rect.center, sprite.bottomright))
+
+        
+        #self.rays.append(Ray(self.rect.center, (610, 100)))
+        # sort by anghle
+        self.rays.sort()
 
     def animation_start(self, dir):
         return sum(self.animation_cycles[:dir])
@@ -138,7 +143,7 @@ class PC(SuperSprite):
 
     # change level and move the PC to the defined position
     def levelTriggerCollision(self, group):
-        transition = self.collideRect(self.hitbox, group)
+        transition = self.collideRect(self.rect, group)
         if transition:
             if transition.index > -1:
                 self.x = transition.PC_x

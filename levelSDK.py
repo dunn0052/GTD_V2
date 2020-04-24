@@ -5,6 +5,7 @@ from PC import PC
 import npc
 import levelTile
 import levelTrigger
+import rayAnchor 
 from spritesheet import spritesheet
 
 import pygame as pg
@@ -94,6 +95,14 @@ class packedLevel:
                                 image = self.tiles[int(tile)])
                             self.level.OVER_LAYER.add(ent)
                             self.level.all_sprites.add(ent)
+
+    def setRayAnchors(self, filename):
+        data = self.loadData(filename)
+        for row, tiles in enumerate(data):
+                    for col, tile in enumerate(tiles):
+                        if int(tile) > -1:
+                            ent = rayAnchor.RayAnchor((col * self.tileHeight, row * self.tileWidth), self.tileWidth, self.tileHeight)
+                            self.level.ray_anchors[(ent.X, ent.Y)] = ent
 
     def setDarkness(self, height, width, alpha):
         #set to size of screen

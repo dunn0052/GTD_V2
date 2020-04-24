@@ -10,3 +10,8 @@ class LevelTile(pg.sprite.Sprite):
         self.y = y
         self.rect.x = x
         self.rect.y = y
+
+
+    def draw(self, surface, offset = (0,0)):
+        surface.blit(self.image, \
+        (self.rect.x + offset[0], self.rect.y + offset[1]))

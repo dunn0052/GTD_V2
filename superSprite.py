@@ -55,7 +55,7 @@ class SuperSprite(pygame.sprite.Sprite):
         self.scale = 1
 
         # need to modify for uneven frames
-        self.animation_cycle = frames//4
+        self.animation_cycle = frames//4 if frames%4 == 0 else 1
         
         self.current_frame = 0
 
@@ -250,6 +250,11 @@ class SuperSprite(pygame.sprite.Sprite):
     # time changes between game loops
     def update(self, dt = 0):
         self.dt = dt
+
+
+    def draw(self, surface, offset = (0,0)):
+            surface.blit(self.image, \
+            (self.rect.x + offset[0], self.rect.y + offset[1]))
 
 # ------ LOADING FUNCTIONS ------
     # calls the packed lambda functions

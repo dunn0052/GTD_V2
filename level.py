@@ -1,11 +1,13 @@
 import pygame as pg
+import pygame.gfxdraw
 from textBox import Textbox
+from superSpriteGroup import SuperSpriteGroup as sg
 # the level class holds the layers of sprites to draw
 # it also executes commands of the current controller context
 
 
 class Level:
-    def __init__(self, layerNum = 7, name = "NoName"):
+    def __init__(self, layerNum = 8, name = "NoName"):
         self.tileHeight, self.tileWidth = 0,0
         # filenames
         self.name = name
@@ -27,22 +29,25 @@ class Level:
         self.animated_sprites = pg.sprite.Group()
         self.static_sprites = pg.sprite.OrderedUpdates() # maybe layeredUpdates?
         self.text_layer = pg.sprite.Group() # need more than 1 textbox?
-        self.npc_sprites = [] #so you can access individual NPCs
+        self.npc_sprites = list() #so you can access individual NPCs
         self.enemy_sprites = pg.sprite.Group()
         self.talking_sprites = pg.sprite.Group()
+        self.ray_anchors = dict()
 
         # draw layers
-        self.layers = []
+        self.layers = list()
         for _ in range(layerNum):
-            self.layers.append(pg.sprite.LayeredUpdates())
+            self.layers.append(sg())
+
         try:
             self.BACKGROUND = self.layers[0] # background image
-            self.WALL_LAYER = self.layers[1] # level walls
-            self.NPC_LAYER = self.layers[2] # draw NPC next
-            self.TRIGGER_LAYER = self.layers[3] # level triggers
-            self.PC_LAYER = self.layers[4] # draw pc
-            self.OVER_LAYER = self.layers[5] # things overhead - bridges/roof
-            self.WEATHER_LAYER = self.layers[6] # small alpha effects -- rain, clouds, etc.
+            self.RAY_LAYER = self.layers[1] # if layer change also change SetPC()
+            self.WALL_LAYER = self.layers[2] # level walls
+            self.NPC_LAYER = self.layers[3] # draw NPC next
+            self.TRIGGER_LAYER = self.layers[4] # level triggers
+            self.PC_LAYER = self.layers[5] # draw pc
+            self.OVER_LAYER = self.layers[6] # things overhead - bridges/roof
+            self.WEATHER_LAYER = self.layers[7] # small alpha effects -- rain, clouds, etc.
         except:
             print("Number of layers must be greater than 7")
 
@@ -97,7 +102,9 @@ class Level:
         self.PC.moveTo(x, y)
 
         # attatch rays to all solid sprites
-        self.PC.createRays(self.solid_sprites.values())
+        self.PC.createRays((self.tileWidth, self.tileHeight), (self.mapWidth, self.mapHeight), self.ray_anchors, self.solid_sprites)
+        # set to RAY_LAYER
+        self.layers[1] = self.PC.rays
 
 
     def updateText(self):
@@ -116,7 +123,6 @@ class Level:
 
             self.PC.textNotify = False
             
-
         if self.text_box.done:
             self.setContext(self.PC)
             self.text_box.done = False
@@ -135,7 +141,7 @@ class Level:
         self.PC.controllerMove(self.solid_sprites.values())
         self.PC.levelTriggerCollision(self.exit_triggers)
         self.animate()
-        
+
     # Animate all sprites in the animation group
     def animate(self):
         for sprite in self.animated_sprites:
@@ -143,10 +149,7 @@ class Level:
 
     def updateLighting(self, camera):
         for ray in self.PC.rays:
-
-            #ray.raytrace(self.solid_sprites, self.tileHeight, self.tileWidth)
-            ray.rayTrace(self.tileHeight, self.tileWidth, self.solid_sprites)
-            ray.update(camera.camera.topleft)
+            ray.rayTrace()
                 
 
     # is the map too small for the screen dimensions? 
