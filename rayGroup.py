@@ -8,6 +8,7 @@ class RayGroup(object):
 
     # unit vector @ 0 rads
     _ref = pg.Vector2((1,1))
+    # size of screen
     _lightSurf = pg.Surface((1920,2000), pg.SRCALPHA)
     _group = None
 
@@ -70,3 +71,6 @@ class RayGroup(object):
 
     def empty(self):
         return len(self._rays) > 0
+
+    def sound(self):
+        pass

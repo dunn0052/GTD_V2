@@ -174,7 +174,13 @@ class Level:
         self.all_sprites.update(dt)
         self.PC.controllerMove(self.solid_sprites.values())
         self.PC.levelTriggerCollision(self.exit_triggers)
+        self.updateSound()
         self.animate()
+
+
+    def updateSound(self):
+        # go through sprite gorups and call their sound functions
+        pass
 
     # Animate all sprites in the animation group
     def animate(self):
