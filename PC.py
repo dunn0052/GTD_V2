@@ -3,22 +3,22 @@ from math import sqrt
 import pygame as pg
 from ray2 import Ray
 from rayGroup import RayGroup
+from pygame import Vector2 as v2
 
 class PC(SuperSprite):
-    
-    # level index because this class is sent
-    # through level instances
-    level_index = 0
-
-
+    # in theory these should be passed from SuperSPrite
     # used for diagonal distance calculations
     __i_sqrt_2 = 1/sqrt(2)
 
-        # directions coordinate the direction frame collections
+    # directions coordinate the direction frame collections
     __UP = 3
     __DOWN = 0
     __LEFT = 1
     __RIGHT = 2
+
+    # level index because this class is sent
+    # through level instances
+    level_index = 0
 
     def __init__(self, image, frames: int, x: int, y: int, \
         speed: int, starting_direction: int, upFrame = 0, \
@@ -26,31 +26,8 @@ class PC(SuperSprite):
         controllerIndex: int = 0, level_index = 0, buffer = 20):
 
         #init the super sprite
-        super(PC, self).__init__(x, y, image, frames)
-
-        # velocity in each direction
-        self.vx, self.vy = 0, 0
-
-        # speed in pixels per second
-        self.speed = speed
-
-        self.direction = starting_direction
-        
-        # User defined frames per direction
-        self.animation_cycles = [downFrame, leftFrame, rightFrame, upFrame]
-        
-        # if none are defined then assume that they are evenly distributed
-        if not any(self.animation_cycles):
-            self.animation_cycles = [frames//4]*4
-
-        # pre calculate which frame index each direction starts on
-        self.frame_start = {self.__UP:self.animation_start(self.__UP),\
-                            self.__DOWN:self.animation_start(self.__DOWN),\
-                            self.__LEFT:self.animation_start(self.__LEFT),\
-                            self.__RIGHT:self.animation_start(self.__RIGHT)}
-        
-        self.move_flag_y = False
-        self.move_flag_x = False
+        super(PC, self).__init__(x, y, image, frames, speed, \
+        starting_direction, upFrame, downFrame, leftFrame, rightFrame, None)
 
         # Set the controller that owns this PC
         self.controllerIndex = controllerIndex
@@ -73,25 +50,51 @@ class PC(SuperSprite):
     def createRays(self, tileSize, mapSize, rayAnchors, solidObjects):
         self.rays = RayGroup(tileSize, mapSize, solidObjects.keys())
 
-        for sprite in rayAnchors.values():
-                self.rays.append(Ray(self.rect.center, sprite.topleft))
-                self.rays.append(Ray(self.rect.center, sprite.topright))
-                self.rays.append(Ray(self.rect.center, sprite.bottomleft))
-                self.rays.append(Ray(self.rect.center, sprite.bottomright))
+        for coord in rayAnchors:
+            anchor = rayAnchors[coord]
+            for corner in self.find_corners(coord, anchor, solidObjects):
+                self.rays.append(Ray(self.rect.center, corner))
 
+    def find_corners(self,coord, anchor, solidObjects):
+        r = anchor
+        corners = [r.topleft, r.topright, r.bottomright, r.bottomleft]
+
+        '''
+        coordinate offsets to R
+        0|1|2
+        7|R|3
+        6|5|4
+        '''
+        blockOffsets = [ (-1,-1), (0,-1),(1,-1), \
+                             (1,0),(1,1),(0,1), \
+                             (-1,-1),(-1,0) ]
+
+        #clockwise starting at top center
+        surrounding = 0b00000000
+        c = coord
+        for b in range(len(blockOffsets) -1):
+            blockCoordinate = \
+            (c[0] + blockOffsets[b][0], c[1] + blockOffsets[b][1])
+            
+            surrounding |= self.isSolid(blockCoordinate, solidObjects)<<b
+
+        # check if any of the corners are present
+        # 0b100000011 0b000001110 0b000111000 0b111000000
+        if surrounding & 0b000000001:
+            corners.remove(r.topleft)
+        if surrounding & 0b000000100:
+            corners.remove(r.topright)
+        if surrounding & 0b000010000:
+            corners.remove(r.bottomright)
+        if surrounding & 0b010000000:
+            corners.remove(r.bottomleft)
         
-        #self.rays.append(Ray(self.rect.center, (610, 100)))
-        # sort by anghle
-        self.rays.sort()
+        return corners
 
-    def animation_start(self, dir):
-        return sum(self.animation_cycles[:dir])
 
-    def changeDirection(self, direction: int):
-        self.direction = direction
-        # start on current frame of specified direction
-        self.changeImage(self.frame_start[self.direction] + self.current_frame%self.animation_cycles[self.direction])
-
+    def isSolid(self, coord, solidObjects):
+        return coord in solidObjects
+        
     #---- movement commands ----
     def doDOWN(self):
         #  First dir

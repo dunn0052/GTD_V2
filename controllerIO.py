@@ -42,12 +42,19 @@ class Controller:
 
         # fast access mapping from input to enum
         if keyboard:
+
+            pygame.event.set_allowed([pygame.QUIT, pygame.KEYDOWN, pygame.KEYUP])
+
             self.buttonMap =   {k["x"]:self.Button(KB.X, ButtonTypes.SINGLE), k["a"]:self.Button(KB.A, ButtonTypes.SINGLE), \
                                 k["b"]:self.Button(KB.B, ButtonTypes.SINGLE), k["y"]:self.Button(KB.Y, ButtonTypes.SINGLE), \
                                 k["q"]:self.Button(KB.L, ButtonTypes.SINGLE), k["e"]:self.Button(KB.R, ButtonTypes.SINGLE), \
                                 k["h"]:self.Button(KB.START, ButtonTypes.SINGLE), k["g"]:self.Button(KB.SELECT, ButtonTypes.SINGLE), \
                                 k["up"]:self.Button(KB.UP, ButtonTypes.HOLD), k["down"]:self.Button(KB.DOWN, ButtonTypes.HOLD), \
                                 k["left"]:self.Button(KB.LEFT, ButtonTypes.HOLD), k["right"]:self.Button(KB.RIGHT, ButtonTypes.HOLD)}
+
+            # hiding the input function if a keyboard is used
+            # or a controller is not connected for it
+            self.getInput = self.getKeys
 
         else:
             self.buttonMap =   {0:self.Button(KB.X, ButtonTypes.SINGLE), 1:self.Button(KB.A, ButtonTypes.SINGLE), \
@@ -56,10 +63,6 @@ class Controller:
                                 8:self.Button(KB.SELECT, ButtonTypes.SINGLE), 9:self.Button(KB.START, ButtonTypes.SINGLE), \
                                 "UP":self.Button(KB.UP, ButtonTypes.HOLD), "DOWN":self.Button(KB.DOWN, ButtonTypes.HOLD), \
                                 "LEFT":self.Button(KB.LEFT, ButtonTypes.HOLD), "RIGHT":self.Button(KB.RIGHT, ButtonTypes.HOLD)}
-        # hiding the input function if a keyboard is used
-        # or a controller is not connected for it
-        if keyboard:
-            self.getInput = self.getKeys
 
         self.inputs = set()
         self.previousInputs = set()

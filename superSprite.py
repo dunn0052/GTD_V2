@@ -1,6 +1,6 @@
 import pygame, math, sys, os
 vec = pygame.math.Vector2
-
+from math import sqrt
 import keyboardInput as KB
 
 '''
@@ -13,7 +13,7 @@ for interaction with buttons
 class SuperSprite(pygame.sprite.Sprite):
     
     # used for diagonal distance calculations
-    __sqrt_2 = math.sqrt(2)
+    __i_sqrt_2 = 1/sqrt(2)
 
     # directions coordinate the direction frame collections
     __UP = 3
@@ -21,7 +21,9 @@ class SuperSprite(pygame.sprite.Sprite):
     __LEFT = 1
     __RIGHT = 2
 
-    def __init__(self, x = 0, y = 0, image = None, frames=1):
+    def __init__(self, x = 0, y = 0, image = None, frames=1,  speed: int = 0, \
+        starting_direction: int = 0, upFrame = 0, downFrame = 0, leftFrame = 0, \
+        rightFrame = 0, sounds = None):
         
         pygame.init()
         pygame.sprite.Sprite.__init__(self)
@@ -65,6 +67,34 @@ class SuperSprite(pygame.sprite.Sprite):
         # finally move to proper position
         self.moveTo(self.x, self.y)
 
+        #sounds
+        self.sounds = sounds
+
+        # velocity in each direction
+        self.vx, self.vy = 0, 0
+
+        # speed in pixels per second
+        self.speed = speed
+
+        self.direction = starting_direction
+        
+        # User defined frames per direction
+        self.animation_cycles = [downFrame, leftFrame, rightFrame, upFrame]
+        
+        # if none are defined then assume that they are evenly distributed
+        if not any(self.animation_cycles):
+            self.animation_cycles = [frames//4]*4
+
+
+        
+        self.move_flag_y = False
+        self.move_flag_x = False
+
+        # pre calculate which frame index each direction starts on
+        self.frame_start = {self.__UP:self.animation_start(self.__UP),\
+                            self.__DOWN:self.animation_start(self.__DOWN),\
+                            self.__LEFT:self.animation_start(self.__LEFT),\
+                            self.__RIGHT:self.animation_start(self.__RIGHT)}
 
         # commands
         self.commands = {KB.A:self.doA,KB.B:self.doB,KB.X:self.doX,KB.Y:self.doY,KB.DOWN:self.doDOWN, \
@@ -154,6 +184,15 @@ class SuperSprite(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = oldmiddle
         self.mask = pygame.mask.from_surface(self.image)
+
+    def animation_start(self, dir):
+        return sum(self.animation_cycles[:dir])
+
+    def changeDirection(self, direction: int):
+        self.direction = direction
+        # start on current frame of specified direction
+        self.changeImage(self.frame_start[self.direction] + self.current_frame%self.animation_cycles[self.direction])
+
 
 # ---- MOVEMENT FUNCTIONS ------
 # move from current position x, y distance

@@ -54,6 +54,7 @@ class packedLevel:
                             self.level.WALL_LAYER.add(ent)
                             self.level.all_sprites.add(ent)
                             self.level.solid_sprites[(col, row)] = ent
+                            self.level.ray_reflect[(col, row)] = ent
 
     def loadTriggers(self, filename):
         data = self.loadData(filename)
@@ -102,7 +103,7 @@ class packedLevel:
                     for col, tile in enumerate(tiles):
                         if int(tile) > -1:
                             ent = rayAnchor.RayAnchor((col * self.tileHeight, row * self.tileWidth), self.tileWidth, self.tileHeight)
-                            self.level.ray_anchors[(ent.X, ent.Y)] = ent
+                            self.level.ray_anchors[(col, row)] = ent
 
     def setDarkness(self, height, width, alpha):
         #set to size of screen
@@ -140,6 +141,13 @@ class packedLevel:
         self.level.all_sprites.add(sprite)
         #self.level.solid_sprites.add(sprite)
         self.level.animated_sprites.add(sprite)
+
+
+    def setBacgroundMusic(self, filename):
+        self.level.backgroundMusic(filename)
+
+    def continueMusic(self):
+        self.level.continueMusic()
 
 #---------- PACK COMMANDS -----------
 # These functions "spring load" image loading

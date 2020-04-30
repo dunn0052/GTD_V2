@@ -30,8 +30,10 @@ class Game:
     def changeLevel(self):
         PC = self.currentLevel.PC
         PC.rays.clear()
+        self.currentLevel.stopBGMusic()
         self.currentLevel = self.levels[PC.level_index]
         self.currentLevel.setPC(PC, PC.x, PC.y)
+        self.currentLevel.playBGMusic()
 
 
     # adds level on deck

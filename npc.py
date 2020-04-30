@@ -10,3 +10,9 @@ class NPC(SuperSprite):
 
     def setText(self, text: str):
         self.text = text
+
+    def playSound(self):
+        pass
+
+    def interact(self):
+        pass

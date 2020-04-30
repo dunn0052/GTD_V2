@@ -14,8 +14,9 @@ class Screen:
         pg.init()
         self.width = Width
         self.height = Height
-        self.screen = pg.display.set_mode()
+        self.screen = pg.display.set_mode( )
         pg.display.set_caption(Title)
+        print(pg.display.Info())
         self.clock = pg.time.Clock()
         self.controllers = []
         # camera size of screen
@@ -42,6 +43,7 @@ class Screen:
     def loadLevel(self):
         self.camera.mapSize(self.game.currentLevel.mapHeight, self.game.currentLevel.mapWidth)
         self.game.currentLevel.setScreenSize(self.height, self.width)
+        self.game.currentLevel.playBGMusic()
 
     def doCommands(self):
         self.game.doCommands()
@@ -106,7 +108,7 @@ class Screen:
 
     def drawAllLayers(self, layers):
         for layer in layers:
-            layer.draw(self.screen, self.camera.camera.topleft)
+            layer.draw(self.screen, self.camera.camera.topleft, self.game.currentLevel.darkness)
 
 
     # draws the level layers in order and

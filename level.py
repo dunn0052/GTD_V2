@@ -7,6 +7,9 @@ from superSpriteGroup import SuperSpriteGroup as sg
 
 
 class Level:
+    # length of music fadein/out
+    _fadeTime_ms = 1000
+
     def __init__(self, layerNum = 8, name = "NoName"):
         self.tileHeight, self.tileWidth = 0,0
         # filenames
@@ -18,6 +21,12 @@ class Level:
         # ensure that there is only one of each controller
         self.controllers = set()
 
+        # audio
+        pg.mixer.init()
+        self.bgMusic = None
+        self.endMusic = True
+
+        # display constants
         self.PC = None
         self.text_box = None
         self.darkness = pg.Surface((0,0))
@@ -32,7 +41,9 @@ class Level:
         self.npc_sprites = list() #so you can access individual NPCs
         self.enemy_sprites = pg.sprite.Group()
         self.talking_sprites = pg.sprite.Group()
+
         self.ray_anchors = dict()
+        self.ray_reflect = dict()
 
         # draw layers
         self.layers = list()
@@ -41,15 +52,35 @@ class Level:
 
         try:
             self.BACKGROUND = self.layers[0] # background image
-            self.RAY_LAYER = self.layers[1] # if layer change also change SetPC()
+            self.NPC_LAYER = self.layers[1] # draw NPC next
             self.WALL_LAYER = self.layers[2] # level walls
-            self.NPC_LAYER = self.layers[3] # draw NPC next
-            self.TRIGGER_LAYER = self.layers[4] # level triggers
-            self.PC_LAYER = self.layers[5] # draw pc
+            self.RAY_LAYER = self.layers[3] # if layer change also change SetPC()
+            self.PC_LAYER = self.layers[4] # draw pc
+            self.TRIGGER_LAYER = self.layers[5] # level triggers
             self.OVER_LAYER = self.layers[6] # things overhead - bridges/roof
             self.WEATHER_LAYER = self.layers[7] # small alpha effects -- rain, clouds, etc.
+
         except:
             print("Number of layers must be greater than 7")
+
+
+    # audio functions
+    def backgroundMusic(self, filename):
+        self.bgMusic = pg.mixer.Sound(filename)
+
+    def playBGMusic(self):
+        if self.bgMusic:
+            self.bgMusic.play(loops=-1, fade_ms = self._fadeTime_ms)
+
+
+    def continueMusic(self):
+        self.endMusic = False
+
+    def stopBGMusic(self):
+        if self.bgMusic:
+            self.bgMusic.fadeout(self._fadeTime_ms)
+
+            
 
     # runs through all controllers and controls the PC
     # sends the button presses to the PC
@@ -102,9 +133,11 @@ class Level:
         self.PC.moveTo(x, y)
 
         # attatch rays to all solid sprites
-        self.PC.createRays((self.tileWidth, self.tileHeight), (self.mapWidth, self.mapHeight), self.ray_anchors, self.solid_sprites)
+        self.PC.createRays((self.tileWidth, self.tileHeight), (self.mapWidth, self.mapHeight), self.ray_anchors, self.ray_reflect)
+        if self.PC.rays.empty():
+            self.OVER_LAYER.darken((100,100,100))
         # set to RAY_LAYER
-        self.layers[1] = self.PC.rays
+        self.layers[3] = self.PC.rays
 
 
     def updateText(self):
@@ -113,6 +146,7 @@ class Level:
 
             talkingSprite = self.PC.collideRect(self.PC.interactionBox, self.talking_sprites)
             if talkingSprite:
+
                 # check to see if you're facing the talking sprite
                 if self.PC.anySideCollision(talkingSprite.rect):
                     self.text_box.setText(talkingSprite.text)
@@ -149,7 +183,7 @@ class Level:
 
     def updateLighting(self, camera):
         for ray in self.PC.rays:
-            ray.rayTrace()
+            ray.rayTraceAll()
                 
 
     # is the map too small for the screen dimensions? 
