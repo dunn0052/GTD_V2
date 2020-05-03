@@ -44,7 +44,7 @@ class Textbox(SuperSprite):
             self.word = next(self.line)
             self.wordLength = len(self.word)
             self.letterIndex = 0
-            self.wordSurface = self.font.render(self.word, 0, self.fontColor)
+            self.wordSurface = self.font.render(self.word, True, self.fontColor)
             self.word_width, self.word_height = self.wordSurface.get_size()
             # if word length goes past the length of the text box
             if self.textX + self.word_width >= self.rect.width - self.offset:

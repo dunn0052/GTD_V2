@@ -6,11 +6,13 @@ import pygame as pg
 class Camera:
     def __init__(self, width, height):
         self.camera = pg.Rect(0, 0, width, height)
+        self.c = (1,1)
         self.width = width
         self.height = height
 
     # move entity relative to camera position
     def apply(self, entity):
+
         return entity.rect.move(self.camera.topleft)
 
     def applyCoord(self, entity):
@@ -30,6 +32,11 @@ class Camera:
         y = max(-(self.mapHeight - self.height), y)  # bottom
         self.camera = pg.Rect(x, y, self.mapWidth, self.mapHeight)
 
+    def moved(self):
+        moved = (self.c[0] != self.camera.x or self.c[1] != self.camera.y)
+        self.c = (self.camera.x, self.camera.y)
+        return moved
+ 
     # define map edges
     def mapSize(self, height, width):
         self.mapHeight = height

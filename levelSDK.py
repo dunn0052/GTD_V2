@@ -50,7 +50,7 @@ class packedLevel:
                     for col, tile in enumerate(tiles):
                         if int(tile) > -1:
                             ent = levelTile.LevelTile(x = col * self.tileHeight, y = row * self.tileWidth, \
-                                image = self.tiles[int(tile)])
+                                image = self.tiles[int(tile)], key = int(tile))
                             self.level.WALL_LAYER.add(ent)
                             self.level.all_sprites.add(ent)
                             self.level.solid_sprites[(col, row)] = ent
@@ -93,7 +93,7 @@ class packedLevel:
                     for col, tile in enumerate(tiles):
                         if int(tile) > -1:
                             ent = levelTile.LevelTile(x = col * self.tileHeight, y = row * self.tileWidth, \
-                                image = self.tiles[int(tile)])
+                                image = self.tiles[int(tile)], key = int(tile))
                             self.level.OVER_LAYER.add(ent)
                             self.level.all_sprites.add(ent)
 
@@ -146,8 +146,6 @@ class packedLevel:
     def setBacgroundMusic(self, filename):
         self.level.backgroundMusic(filename)
 
-    def continueMusic(self):
-        self.level.continueMusic()
 
 #---------- PACK COMMANDS -----------
 # These functions "spring load" image loading

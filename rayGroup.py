@@ -35,10 +35,11 @@ class RayGroup(object):
         for ray in self._rays:
             yield ray
 
-    def __getitem__(self, inded):
-        self._rays.clear()
+    def __getitem__(self, index):
+        if index < len(self._rays):
+            return self._rays[index]
 
-    def draw(self, screen, offset = (0,0), effect = None):
+    def draw(self, screen, offset = (0,0)):
         if self._rays:
             # clear surface
             self._lightSurf.fill(self.darkness)

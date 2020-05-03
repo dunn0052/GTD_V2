@@ -10,7 +10,7 @@ There are virtual functions that can be used
 for interaction with buttons
 '''
 
-class SuperSprite(pygame.sprite.Sprite):
+class SuperSprite(pygame.sprite.DirtySprite):
     
     # used for diagonal distance calculations
     __i_sqrt_2 = 1/sqrt(2)
@@ -23,7 +23,7 @@ class SuperSprite(pygame.sprite.Sprite):
 
     def __init__(self, x = 0, y = 0, image = None, frames=1,  speed: int = 0, \
         starting_direction: int = 0, upFrame = 0, downFrame = 0, leftFrame = 0, \
-        rightFrame = 0, sounds = None):
+        rightFrame = 0):
         
         pygame.init()
         pygame.sprite.Sprite.__init__(self)
@@ -68,7 +68,8 @@ class SuperSprite(pygame.sprite.Sprite):
         self.moveTo(self.x, self.y)
 
         #sounds
-        self.sounds = sounds
+        self.sounds = dict()
+        self.currentSounds = list()
 
         # velocity in each direction
         self.vx, self.vy = 0, 0
@@ -155,6 +156,7 @@ class SuperSprite(pygame.sprite.Sprite):
       self.frameHeight = originalRect.height
       self.rect.center = oldcenter
       self.mask = pygame.mask.from_surface(self.image)
+      self.dirty = 1
 
     def nextFrame(self):
         self.currentImage += 1
@@ -288,12 +290,24 @@ class SuperSprite(pygame.sprite.Sprite):
     # use in calculating the real
     # time changes between game loops
     def update(self, dt = 0):
+        self.currentSounds.clear()
         self.dt = dt
 
 
     def draw(self, surface, offset = (0,0)):
             surface.blit(self.image, \
             (self.rect.x + offset[0], self.rect.y + offset[1]))
+
+    def setSound(self, key: str, sound: str):
+        self.sounds[key] = pygame.mixer.Sound(sound)
+
+    def getSound(self, key: str):
+        if key in self.sounds:
+            return self.sounds[key]
+
+    def playSound(self, key):
+        self.currentSounds.append(self.getSound(key))
+
 
 # ------ LOADING FUNCTIONS ------
     # calls the packed lambda functions

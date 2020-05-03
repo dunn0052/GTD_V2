@@ -21,15 +21,16 @@ class Level:
         # ensure that there is only one of each controller
         self.controllers = set()
 
-        # audio
-        pg.mixer.init()
+        # start bg music
         self.bgMusic = None
-        self.endMusic = True
+
+        # list of sounds to be played during update
+        self.soundBuffer = list()
 
         # display constants
         self.PC = None
         self.text_box = None
-        self.darkness = pg.Surface((0,0))
+
 
         # initialize all variables and do all the setup for a new game
         self.all_sprites = pg.sprite.Group()
@@ -68,20 +69,6 @@ class Level:
     def backgroundMusic(self, filename):
         self.bgMusic = pg.mixer.Sound(filename)
 
-    def playBGMusic(self):
-        if self.bgMusic:
-            self.bgMusic.play(loops=-1, fade_ms = self._fadeTime_ms)
-
-
-    def continueMusic(self):
-        self.endMusic = False
-
-    def stopBGMusic(self):
-        if self.bgMusic:
-            self.bgMusic.fadeout(self._fadeTime_ms)
-
-            
-
     # runs through all controllers and controls the PC
     # sends the button presses to the PC
     def doCommands(self, context):
@@ -115,7 +102,7 @@ class Level:
         self.BACKGROUND.add(background)
 
     def draw_weather_effects(self, screen):
-        screen.blit(self.darkness, (0,0))
+        pass
 
     # sets playable PC -- @TODO: setup for multiplayer
     def setPC(self, PC, x, y):
@@ -123,6 +110,7 @@ class Level:
         if self.PC:
             self.PC.kill()
 
+        # attach PC to level
         self.PC = PC
         self.PC_LAYER.add(self.PC)
         self.all_sprites.add(self.PC)
@@ -134,6 +122,8 @@ class Level:
 
         # attatch rays to all solid sprites
         self.PC.createRays((self.tileWidth, self.tileHeight), (self.mapWidth, self.mapHeight), self.ray_anchors, self.ray_reflect)
+        
+        # darken over layer to match negative ray space darkness
         if self.PC.rays.empty():
             self.OVER_LAYER.darken((100,100,100))
         # set to RAY_LAYER
@@ -177,10 +167,12 @@ class Level:
         self.updateSound()
         self.animate()
 
-
     def updateSound(self):
+        self.soundBuffer.clear()
         # go through sprite gorups and call their sound functions
-        pass
+        # add all sounds from a given sprite
+        for sprite in self.PC_LAYER:
+            self.soundBuffer += sprite.currentSounds
 
     # Animate all sprites in the animation group
     def animate(self):
@@ -190,7 +182,6 @@ class Level:
     def updateLighting(self, camera):
         for ray in self.PC.rays:
             ray.rayTraceAll()
-                
 
     # is the map too small for the screen dimensions? 
     # Needed for smallUpdate()

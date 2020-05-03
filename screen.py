@@ -1,5 +1,6 @@
 import pygame as pg
 from camera import Camera
+from audio import Audio
 import os
 
 #testing
@@ -14,7 +15,7 @@ class Screen:
         pg.init()
         self.width = Width
         self.height = Height
-        self.screen = pg.display.set_mode( )
+        self.screen = pg.display.set_mode(flags = pg.HWSURFACE | pg.DOUBLEBUF)
         pg.display.set_caption(Title)
         print(pg.display.Info())
         self.clock = pg.time.Clock()
@@ -33,6 +34,8 @@ class Screen:
         self.screenRefresh = False
         self.tooSmall = False
 
+        self.fps_font = pg.font.SysFont("Arial", 100)
+
     # will be used when level loading is created
     def loadGame(self, game):
         self.game = game
@@ -43,7 +46,6 @@ class Screen:
     def loadLevel(self):
         self.camera.mapSize(self.game.currentLevel.mapHeight, self.game.currentLevel.mapWidth)
         self.game.currentLevel.setScreenSize(self.height, self.width)
-        self.game.currentLevel.playBGMusic()
 
     def doCommands(self):
         self.game.doCommands()
@@ -67,6 +69,10 @@ class Screen:
             self.update()
             self.updateDisplay()
 
+    def displayFPS(self):
+        fps_text = self.fps_font.render(str(int(self.clock.get_fps())), True, (255,0,0))
+        self.screen.blit(fps_text, (100,100))
+
     # updates the game and moves the camera
     def update(self):
         self.game.update(self.dt)
@@ -85,6 +91,7 @@ class Screen:
     # quit when necessary
     def updateDisplay(self):
         self.clearScreen()
+
         # explore dirty sprites
         self.drawAllLayers(self.game.currentLevel.layers)
         
@@ -92,6 +99,7 @@ class Screen:
         self.game.currentLevel.static_sprites.draw(self.screen)
         self.game.currentLevel.text_layer.draw(self.screen)
 
+        self.displayFPS()
 
         pg.display.flip()
         keys = pg.key.get_pressed()
@@ -108,15 +116,8 @@ class Screen:
 
     def drawAllLayers(self, layers):
         for layer in layers:
-            layer.draw(self.screen, self.camera.camera.topleft, self.game.currentLevel.darkness)
+            layer.draw(self.screen, self.camera.camera.topleft)
 
-
-    # draws the level layers in order and
-    # adjusts the sprites to the camera view
-    def drawScrollLayer(self, layer):
-        for sprite in layer:
-            # keep sprite pos static and draw with camera offsets
-            self.screen.blit(sprite.image, self.camera.apply(sprite))
 
     def quit(self):
         print("Game Ended")

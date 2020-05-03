@@ -27,12 +27,14 @@ class PC(SuperSprite):
 
         #init the super sprite
         super(PC, self).__init__(x, y, image, frames, speed, \
-        starting_direction, upFrame, downFrame, leftFrame, rightFrame, None)
+        starting_direction, upFrame, downFrame, leftFrame, rightFrame)
 
         # Set the controller that owns this PC
         self.controllerIndex = controllerIndex
         self.level_index = level_index
 
+        # the interaction buffer size -- how many px around char rect to consider
+        # an "interaction"
         self.buffer = buffer
         # make a rect that is slightly bigger than the sprite rect 
         # so that it can detect if things are close to it
@@ -127,6 +129,7 @@ class PC(SuperSprite):
         print(self.x, self.y)
 
     def update(self, dt):
+        self.currentSounds.clear()
         self.dt = dt
 
     # move PC if needed
@@ -135,9 +138,10 @@ class PC(SuperSprite):
             self.movementUpdateX(self.move_flag_y, group)
         if self.move_flag_y:
             self.movementUpdateY(self.move_flag_x, group)
-
+        
         for ray in self.rays:
             ray.move(self.rect.center)
+
         # reset to starting position
         if not self.vx and not self.vy:
             self.changeImage(self.frame_start[self.direction])
@@ -173,7 +177,6 @@ class PC(SuperSprite):
         self.hitbox.y = self.y + self.hitbox.height # hitbox is half our height
         self.interactionBox.y = self.y - self.buffer
         self.collideY(self.collideRect(self.hitbox, group))
-        #self.collideY(self.groupTouching(group))
 
     def movementUpdateX(self, diagonal, group):
         x_distance = self.vx * self.dt
@@ -184,7 +187,6 @@ class PC(SuperSprite):
         self.hitbox.x = self.x
         self.interactionBox.x = self.x
         self.collideX(self.collideRect(self.hitbox, group))
-        #self.collideX(self.groupTouching(group))
 
     # if colliding with something move PC to the edge of it
     def collideX(self, ent):
@@ -198,6 +200,10 @@ class PC(SuperSprite):
         self.interactionBox.x = self.x - self.buffer
         self.hitbox.x = self.x
 
+        #ent.playSound("bump")
+
+
+
 
     def collideY(self, ent):
         if not ent:
@@ -210,6 +216,7 @@ class PC(SuperSprite):
         self.interactionBox.y = self.y - self.buffer
         self.hitbox.y = self.y + self.hitbox.height
 
+        #ent.playSound("bump")
 
     # level is set by the index of the PC on every frame
     # somehow faster than an if statement check

@@ -1,5 +1,6 @@
 import pygame as pg 
-from level import Level 
+from level import Level
+from audio import Audio
 
 # this class holds levels and manages level
 # transitions, controllers, etc..
@@ -10,10 +11,17 @@ class Game:
         self.controllers = set()
         self.currentLevel = None
         self.PC = None
+        self.audio = Audio()
 
+    #everything needed to start a new level
     def start(self):
-        self.currentLevel = self.levels[self.PC.level_index]
-        self.currentLevel.setPC(self.PC, self.PC.x, self.PC.y)
+        # be safe
+        if self.PC.level_index <= len(self.levels):
+            self.currentLevel = self.levels[self.PC.level_index]
+            self.currentLevel.setPC(self.PC, self.PC.x, self.PC.y)
+            #initate sound buffer for game
+            self.audio.setSoundBuffer(self.currentLevel.soundBuffer)
+            self.audio.playMusic(self.currentLevel.bgMusic)
 
 
     # controllers are in a set in case the same one is added more than once
@@ -30,11 +38,9 @@ class Game:
     def changeLevel(self):
         PC = self.currentLevel.PC
         PC.rays.clear()
-        self.currentLevel.stopBGMusic()
-        self.currentLevel = self.levels[PC.level_index]
-        self.currentLevel.setPC(PC, PC.x, PC.y)
-        self.currentLevel.playBGMusic()
+        self.currentLevel.soundBuffer.clear()
 
+        self.start()
 
     # adds level on deck
     def addLevel(self, level):
@@ -54,6 +60,10 @@ class Game:
         if self.currentLevel.index != self.currentLevel.PC.level_index:
             self.changeLevel()
         self.currentLevel.update(dt)
+        self.playAudio()
+
+    def playAudio(self):
+        self.audio.play()
 
     def getLevelIndex(self):
         return self.currentLevel.PC.getLevelIndex()

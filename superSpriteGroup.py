@@ -1,19 +1,29 @@
 import pygame as pg
 
-class SuperSpriteGroup(pg.sprite.Group):
-    #_canvas = pg.Surface((1920,1024))
+class SuperSpriteGroup:
+
+    _moved = True
 
     def __init__(self, width = 1920, height = 1024):
         self.canvas = pg.Surface((width, height), flags = pg.SRCALPHA)
-        super().__init__()
+        self.sprites = list()
 
-    def draw(self, surface, offset = (0,0), effect = None):
+    def draw(self, surface, offset = (0,0)):
         self.canvas.fill((0,0,0,0))
-        for sprite in self.sprites():
-            self.canvas.blit(sprite.image, \
-                (sprite.rect.x + offset[0], sprite.rect.y + offset[1]))
+        for sprite in self.sprites:
+            sprite.draw(self.canvas, offset)
 
         surface.blit(self.canvas, (0,0))
+
+    def add(self, sprite):
+        self.sprites.append(sprite)
+
+    def __iter__(self):
+        for sprite in self.sprites:
+            yield sprite
+
+    def sprites(self):
+        return self.sprites
 
 
     def sound(self):
@@ -21,7 +31,7 @@ class SuperSpriteGroup(pg.sprite.Group):
 
     def darken(self, color):
 
-        for sprite in self.sprites():
+        for sprite in self.sprites:
             sprite.image = self.shaded_image(sprite.image, color)
 
     def shaded_image(self, image, color):
