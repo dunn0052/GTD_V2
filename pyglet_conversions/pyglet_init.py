@@ -1,14 +1,18 @@
 import pyglet
 window = pyglet.window.Window()
 
-quad = pyglet.graphics.vertex_list(4,
-    ('v2i', (10, 10,  100, 10, 100, 100, 10, 100)),
-    ('c3B', (0, 0, 255, 0, 0, 255, 0, 255, 0,  0, 255, 0)))
+sprite_image = pyglet.image.load("images/redPC.png")
+
+batch = pyglet.graphics.Batch()
+
+ball_sprites = []
+for i in range(100):
+    x, y = i * 10, 50
+    ball_sprites.append(pyglet.sprite.Sprite(sprite_image, x, y, batch=batch))
 
 @window.event
 def on_draw():
-    window.clear()
-    quad.draw(pyglet.gl.GL_QUADS)
+    batch.draw()
 
 
 pyglet.app.run()

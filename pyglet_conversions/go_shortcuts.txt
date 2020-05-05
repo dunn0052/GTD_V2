@@ -1,0 +1,2 @@
+scripts;C:\Users\Kevin\Desktop\cmd_scripts
+desktop;C:\Users\Kevin\Desktop

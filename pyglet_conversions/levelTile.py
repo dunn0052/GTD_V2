@@ -18,7 +18,7 @@ class LevelTile(pl.sprite.Sprite):
         self.rect.y = y
 
     def getRect(self, image):
-        return pygame.Rect(image.x, image.y, image.width, image.height)
+        return pg.Rect(image.x, image.y, image.width, image.height)
 
     def glLoad(self, image):
         self.glimage = pl.image.load(image)
